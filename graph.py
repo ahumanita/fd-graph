@@ -46,8 +46,8 @@ class Graph :
 								,node.a[1]+(node.x[1]-mnode.x[1])*elec/(dist**3))
 
 			# drag update
-			# drag = 0.1
-			# node.a = (node.a[0]-node.v[0]*drag,node.a[1]-node.v[1]*drag)
+			drag = 0.01
+			node.a = (node.a[0]-node.v[0]*drag,node.a[1]-node.v[1]*drag)
 
 			# velocity update
 			node.v = (node.a[0]+node.v[0],node.a[1]+node.v[1])
