@@ -37,6 +37,18 @@ class Graph :
 
 
 		for node in self.V :
+			# electric force update
+			elec = 1000
+			for mnode in self.V :
+				if mnode != node :
+					dist = sqrt((node.x[0]-mnode.x[0])**2 + (node.x[1]-mnode.x[1])**2)
+					node.a = (node.a[0]+(node.x[0]-mnode.x[0])*elec/(dist**3)
+								,node.a[1]+(node.x[1]-mnode.x[1])*elec/(dist**3))
+
+			# drag update
+			# drag = 0.1
+			# node.a = (node.a[0]-node.v[0]*drag,node.a[1]-node.v[1]*drag)
+
 			# velocity update
 			node.v = (node.a[0]+node.v[0],node.a[1]+node.v[1])
 
@@ -48,11 +60,3 @@ class Graph :
 				node.v = (node.v[0],-node.v[1])
 
 			node.x = (upd[0], upd[1])
-
-			# electric force update
-			# elec = 100
-			# for mnode in self.V :
-			# 	if mnode != node :
-			# 		dist = sqrt((node.x[0]-mnode.x[0])**2 + (node.x[1]-mnode.x[1])**2)
-			# 		node.a = (node.a[0]+(node.x[0]-mnode.x[0])*elec/(dist**3)
-			# 					,node.a[1]+(node.x[1]-mnode.x[1])*elec/(dist**3))
