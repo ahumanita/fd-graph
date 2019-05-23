@@ -9,7 +9,7 @@ class Node :
 		self.id = id
 
 class Edge :
-	def __init__(self,id,start,target,feather=0.0001,dir="") :
+	def __init__(self,id,start,target,feather=0.001,dir="") :
 		self.id = id
 		self.start = start
 		self.target = target
@@ -37,26 +37,44 @@ class Graph :
 
 			# directions
 			gravity = 5000
-			if edge.dir == "N" :
-				node = self.V[edge.target]
-				start = self.V[edge.start]
-				dist = sqrt((node.x[0]-start.x[0])**2 + (node.x[1]-start.x[1])**2)
-				
-				if start.x[1] < 2*dist/3 :
-					# avoid that start node sticks to top
+			node = self.V[edge.target]
+			start = self.V[edge.start]
+			dist = sqrt((node.x[0]-start.x[0])**2 + (node.x[1]-start.x[1])**2)
+			tol = 2*dist/3
+
+			if edge.dir == "N" or edge.dir == "U" :
+				# avoid that start node sticks to top
+				if start.x[1] < tol :
 					start.a = (start.a[0],start.a[1]-gravity*(start.a[1]-height)/dist**3)
 
-				if start.x[0] < 2*dist/3 :
-					# avoid that start node sticks to right
-					start.a = (start.a[0]-gravity*(start.a[0]-height)/dist**3,start.a[1])
+				# avoid that start node sticks to right
+				if abs(start.x[0]-width) < tol :
+					start.a = (start.a[0]-gravity*(start.a[0]-width)/dist**3,start.a[1])
 
-				if node.x[1] > 0 and node.x[0]>0 and node.x[0] != start.x[0]:
-					# gravity to north
+				# gravity to north
+				if node.x[1] > tol and node.x[0] != start.x[0] :
 					imx = start.x[0]
 					imy = start.x[1]-dist
-					dist = sqrt((node.x[0]-imx)**2 + (node.x[1]-imx)**2)
-					node.a = (node.a[0]-gravity*(node.x[0]-imx)/dist**3,node.a[1]-gravity*(node.x[1]-imy)/dist**3)
+					distim = sqrt((node.x[0]-imx)**2 + (node.x[1]-imx)**2)
+					node.a = (node.a[0]-gravity*(node.x[0]-imx)/distim**3
+								,node.a[1]-gravity*(node.x[1]-imy)/distim**3)
 
+			if edge.dir == "S" or edge.dir == "D" :
+				# avoid that start node sticks to bottom
+				if abs(start.x[1]-height) < tol :
+					start.a = (start.a[0],start.a[1]-gravity*(start.a[1]-height)/dist**3)
+
+				# avoid that start node sticks to right
+				if abs(start.x[0]-height) < tol :
+					start.a = (start.a[0]-gravity*(start.a[0]-height)/dist**3,start.a[1])
+
+				# gravity to north
+				if node.x[1] < height and node.x[0] != start.x[0] :
+					imx = start.x[0]
+					imy = start.x[1]+dist
+					dist = sqrt((node.x[0]-imx)**2 + (node.x[1]-imx)**2)
+					node.a = (node.a[0]-gravity*(node.x[0]-imx)/dist**3
+								,node.a[1]-gravity*(node.x[1]-imy)/dist**3)
 
 		for node in self.V :
 			# electric force update
@@ -68,7 +86,7 @@ class Graph :
 								,node.a[1]+(node.x[1]-mnode.x[1])*elec/(dist**3))
 
 			# drag update
-			drag = 0.01
+			drag = 0.1
 			node.a = (node.a[0]-node.v[0]*drag,node.a[1]-node.v[1]*drag)
 
 			# velocity update
@@ -76,9 +94,17 @@ class Graph :
 
 			# coord update
 			upd = (node.x[0]+node.v[0], node.x[1]+node.v[1])
-			if upd[0] >= width or upd[0] <= 0 :
-				node.v = (-node.v[0],node.v[1])
-			if upd[1] >= height or upd[1] <= 0 :
-				node.v = (node.v[0],-node.v[1])
+
+			# TODO: min ( -node.v[0],node.v[0])
+			if upd[0] >= width :
+				node.v = (min(-node.v[0],node.v[0]),node.v[1])
+			elif upd[0] <= 0 :
+				node.v = (max(-node.v[0],node.v[0]),node.v[1])
+			if upd[1] >= height :
+				node.v = (node.v[0],min(-node.v[1],node.v[1]))
+			elif upd[1] <= 0 :
+				node.v = (node.v[0],max(-node.v[1],node.v[1]))
+
+			upd = (node.x[0]+node.v[0], node.x[1]+node.v[1])
 
 			node.x = (upd[0], upd[1])
