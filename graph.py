@@ -42,40 +42,35 @@ class Graph :
 			dist = sqrt((node.x[0]-start.x[0])**2 + (node.x[1]-start.x[1])**2)
 			tol = 2*dist/3
 
-			if edge.dir == "N" or edge.dir == "U" :
-				# avoid that start node sticks to top
-				if start.x[1] < tol :
-					start.a = (start.a[0],start.a[1]-gravity*(start.a[1]-height)/dist**3)
+			dir_coeff = {"N": (0,-1), "U": (0,-1)
+						, "S": (0,1), "D": (0,1)
+						, "E": (-1,0), "W": (1,0)
+						, "NE": (-1,-1), "NW": (1,-1)
+						, "SE": (-1,1), "SW": (1,1)
+						, "OUT": (0,0)}
 
-				# avoid that start node sticks to right
-				if abs(start.x[0]-width) < tol :
-					start.a = (start.a[0]-gravity*(start.a[0]-width)/dist**3,start.a[1])
+			# if edge.dir == "N" or edge.dir == "U" :
+			if edge.dir in dir_coeff.keys() :
+				# # avoid that start node sticks to top
+				# if start.x[1] < tol :
+				# 	start.a = (start.a[0],start.a[1]-gravity*(start.a[1]-height)/dist**3)
+
+				# # avoid that start node sticks to right
+				# if abs(start.x[0]-width) < tol :
+				# 	start.a = (start.a[0]-gravity*(start.a[0]-width)/dist**3,start.a[1])
+
+				# # avoid that start node sticks to left
+				# if start.x[0] < tol :
+				# 	start.a = (start.a[0]-gravity*(start.a[0]-width)/dist**3,start.a[1])
 
 				# gravity to north
 				if node.x[1] > tol and node.x[0] != start.x[0] :
-					imx = start.x[0]
-					imy = start.x[1]-dist
+					imx = start.x[0] + dir_coeff[edge.dir][0]*dist
+					imy = start.x[1] + dir_coeff[edge.dir][1]*dist
 					distim = sqrt((node.x[0]-imx)**2 + (node.x[1]-imx)**2)
 					node.a = (node.a[0]-gravity*(node.x[0]-imx)/distim**3
 								,node.a[1]-gravity*(node.x[1]-imy)/distim**3)
-
-			if edge.dir == "S" or edge.dir == "D" :
-				# avoid that start node sticks to bottom
-				if abs(start.x[1]-height) < tol :
-					start.a = (start.a[0],start.a[1]-gravity*(start.a[1]-height)/dist**3)
-
-				# avoid that start node sticks to right
-				if abs(start.x[0]-height) < tol :
-					start.a = (start.a[0]-gravity*(start.a[0]-height)/dist**3,start.a[1])
-
-				# gravity to north
-				if node.x[1] < height and node.x[0] != start.x[0] :
-					imx = start.x[0]
-					imy = start.x[1]+dist
-					dist = sqrt((node.x[0]-imx)**2 + (node.x[1]-imx)**2)
-					node.a = (node.a[0]-gravity*(node.x[0]-imx)/dist**3
-								,node.a[1]-gravity*(node.x[1]-imy)/dist**3)
-
+					
 		for node in self.V :
 			# electric force update
 			elec = 500
