@@ -90,7 +90,13 @@ def draw_nodes(w,V,arc_rad,width,height) :
 			,fill="blue")
 
 def draw_edges(w,V,E,width,height) :
+	dir_color = {"N": "blue", "U": "blue", "S": "red", "D": "red", "W": "green", "E": "orange"}
+
 	for edge in E :
+		if edge.dir in dir_color.keys() :
+			color = dir_color[edge.dir]
+		else :
+			color = "black"
 		start = V[edge.start-1]
 		target = V[edge.target-1]
 		w.create_line(int(start.x[0])
@@ -99,7 +105,8 @@ def draw_edges(w,V,E,width,height) :
 			,int(target.x[1])
 			,width=2.5
 			,smooth=1
-			,arrow="last")
+			,arrow="last"
+			,fill=color)
 
 
 
