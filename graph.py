@@ -49,7 +49,7 @@ class Graph :
 		target.a = (target.a[0]-feather*(target.x[0]-start.x[0])
 					,target.a[1]-feather*(target.x[1]-start.x[1]))
 
-	def edge_orientation_update(self,gravity,start,node,dir) :
+	def edge_orientation_update(self,const,start,node,dir) :
 		dist = sqrt((node.x[0]-start.x[0])**2 + (node.x[1]-start.x[1])**2)
 		tol = 2*dist/3
 		# if edge.dir == "N" or edge.dir == "U" :
@@ -61,7 +61,7 @@ class Graph :
 				imy = start.x[1] + self.dir_coeff[dir][1]*dist
 				#Graph.gravity_to_update(gravity,node,(imx,imy))
 				dist = sqrt((node.x[0]-imx)**2 + (node.x[1]-imy)**2)
-				update = ((node.x[0]-imx)/dist,(node.x[1]-imy)/dist)
+				update = (const*(node.x[0]-imx)/dist,const*(node.x[1]-imy)/dist)
 
 			# add orientation again in every step, but not in velocity!
 			node.orient = (node.orient[0]-update[0],node.orient[1]-update[1])
@@ -80,7 +80,6 @@ class Graph :
 				coeff = (1/det*((start2.x[1]-target2.x[1])*(start2.x[0]-start.x[0])+(target2.x[0]-start2.x[0])*(start2.x[1]-start.x[1]))
 						,1/det*((start.x[1]-target.x[1])*(start2.x[0]-start.x[0])+(target.x[0]-start.x[0])*(start2.x[1]-start.x[1])))
 				if 0 < coeff[0] < 1 and 0 < coeff[1] < 1 :
-					print("INTERSECT")
 					dist = sqrt((start.x[0]-coeff[0])**2 + (start.x[1]-coeff[1])**2)
 					start.orient = (start.orient[0]+self.dir_coeff[edge.dir][0]*(start.x[0]-coeff[0])/dist,start.orient[1]+self.dir_coeff[edge.dir][1]*(start.x[1]-coeff[1])/dist)
 					start.orient = (target.orient[0]+self.dir_coeff[edge.dir][0]*(start.x[0]-coeff[0])/dist,target.orient[1]+self.dir_coeff[edge.dir][1]*(start.x[1]-coeff[1])/dist)
@@ -108,14 +107,14 @@ class Graph :
 
 
 	def update(self,width,height,step) :
-		feather = 0.005
-		elec = 500
-		gravity_center = 1
-		drag = 0.9
-		gravity_orient = 500
+		feather = 0.001
+		elec = 0.00000001
+		drag = 0.09
+		gravity_orient = 0
+		C = 0.0005
 		tolerance = True
 
-		center = (int(width/2),int(height/2))
+		center = (width/2.,height/2.)
 
 		# reset acceleration and orientation
 		for node in self.V :
@@ -126,8 +125,8 @@ class Graph :
 			start = self.V[edge.start-1]
 			target = self.V[edge.target-1]
 			self.feather_update(feather,start,target)
-			self.edge_orientation_update(gravity_orient,start,target,edge.dir)
-			self.nonoverlapping_edges_update(edge,start,target)
+			self.edge_orientation_update(C,start,target,edge.dir)
+			# self.nonoverlapping_edges_update(edge,start,target)
 
 		for node in self.V :
 			self.electric_force_update(elec,node)	
@@ -157,14 +156,15 @@ class Graph :
 
 			# final update + gravity update
 			dist_cent = sqrt((node.x[0]-center[0])**2 + (node.x[1]-center[1])**2)
-			upd = (node.v[0]-(node.x[0]-center[0])/dist_cent-node.orient[0] ,node.v[1]-(node.x[1]-center[1])/dist_cent -node.orient[1])
-			#upd = (node.v[0] -node.orient[0],node.v[1] -node.orient[1])
+			upd = (node.v[0]-C*(node.x[0]-center[0])/dist_cent-node.orient[0] ,node.v[1]-C*(node.x[1]-center[1])/dist_cent -node.orient[1])
+			#print(node.x[0] + upd[0])
+			#print((node.x[0]-center[0])*dist_cent)
+			# upd = (node.v[0] -node.orient[0],node.v[1] -node.orient[1])
 
 			# check if change is large
 			#if sqrt(upd[0]**2 + upd[1]**2) > self.tolerance :
 			#	tolerance = True
 
 			node.x = (node.x[0]+upd[0], node.x[1]+upd[1])
-
 
 		return tolerance

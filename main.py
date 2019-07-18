@@ -3,6 +3,7 @@ from random import random
 from graph import Node, Edge, Graph
 from time import sleep
 import records
+from math import sqrt
 
 db = records.Database(open("connection.txt","r").read().split()[0])
 
@@ -78,18 +79,28 @@ def random_coords(V,width,height) :
 	for node in V :
 		t_w = random()
 		t_h = random()
-		node.x = (t_w*width,t_h*height)
+		node.x = (width*t_w,height*t_h)
 
 # place nodes according to the coordinates as ovals in canvas
-def draw_nodes(w,V,arc_rad,width,height) :
+def draw_nodes(w,V,arc_rad,w_width,w_height,scaling) :
 	for node in V :
-		w.create_oval(int(node.x[0]+arc_rad)
-			,int(node.x[1]+arc_rad)
-			,int(node.x[0]-arc_rad)
-			,int(node.x[1]-arc_rad)
+		w.create_oval(int(scaling*node.x[0]+arc_rad)
+			,int(scaling*node.x[1]+arc_rad)
+			,int(scaling*node.x[0]-arc_rad)
+			,int(scaling*node.x[1]-arc_rad)
 			,fill="blue")
 
-def draw_edges(w,V,E,width,height) :
+# always compute the curve node on the left side of the arrow when looking to its direction
+# inline? 
+def get_edge_curve_node(start,target,DIST) :
+	mid = (start[0]+1/2*(target[0]-start[0]),start[1]+1/2*(target[1]-start[1]))
+
+	# turn the vector to the left by 90 degree to get normal
+	unit_normal = (start[1]-target[1],target[0]-start[0])
+
+	return (mid[0]+DIST*unit_normal[0],mid[1]+DIST*unit_normal[1])
+
+def draw_edges(w,V,E,w_width,w_height,scaling) :
 	dir_color = {"N": "blue", "U": "blue", "S": "red", "D": "red", "W": "green", "E": "orange"}
 
 	for edge in E :
@@ -99,11 +110,17 @@ def draw_edges(w,V,E,width,height) :
 			color = "black"
 		start = V[edge.start-1]
 		target = V[edge.target-1]
-		w.create_line(int(start.x[0])
-			,int(start.x[1])
-			,int(target.x[0])
-			,int(target.x[1])
-			,width=2.5
+
+		DIST = 0.1
+		cnode = get_edge_curve_node(start.x,target.x,DIST)
+
+		w.create_line(int(scaling*start.x[0])
+			,int(scaling*start.x[1])
+			,int(scaling*cnode[0])
+			,int(scaling*cnode[1])
+			,int(scaling*target.x[0])
+			,int(scaling*target.x[1])
+			,width=0.1
 			,smooth=1
 			,arrow="last"
 			,fill=color)
@@ -115,7 +132,12 @@ if __name__ == "__main__" :
 
 	w_width = 1200
 	w_height = 720
-	arc_rad = 5
+
+	width = 1
+	height = 9/16
+
+	arc_rad = 1
+	scaling = w_width
 
 	w = Canvas(master, width=w_width, height=w_height)
 	w.pack()
@@ -125,39 +147,39 @@ if __name__ == "__main__" :
 	# V = [Node(0)
 	# 	,Node(1)
 	# 	,Node(2)
-	# 	,Node(3)
-	# 	,Node(4)
-	# 	,Node(5)
-	# 	,Node(6)]
+	# 	,Node(3)]
 
-	# E = [Edge(0,0,1), Edge(1,0,2), Edge(2,1,2), Edge(3,0,3,dir="N"),Edge(4,4,0,dir="N"),Edge(5,1,5,dir="D"),Edge(6,5,6,dir="S")]
-	# 	#, Edge(3,1,2), Edge(4,2,0), Edge(4,2,1)]
+	# E = [Edge(0,0,1,dir="E"), Edge(1,0,2,dir="N"), Edge(2,2,3,dir="S")]
 
 	V = []
 	E = []
 	get_areas(V)
 	get_paths(E)
-
-	print(len(V))
-	print(len(E))
-
 	# init node coordinates
-	random_coords(V,w_width,w_height)
+	random_coords(V,width,height)
 
-	G = Graph(V,E)
+	G = Graph(V,E,0.1)
 
 	# force direction
-	while True :
-		#sleep(0.01)
+	tolerance = True
+	step = 0
+	while tolerance :
+		# sleep(1)
+
+		# if step == 4 :
+		# 	break
 		
 		# update node coordinates
-		G.update(w_width,w_height)
+		tolerance = G.update(width,height,step)
 
 		# clear window
 		w.delete("all")
-		# draw final graph
-		draw_nodes(w,V,arc_rad,w_width,w_height)
-		draw_edges(w,V,E,w_width,w_height)
-		w.update()
 
-	mainloop()
+		# draw final graph
+		draw_nodes(w,V,arc_rad,w_width,w_height,scaling)
+		draw_edges(w,V,E,w_width,w_height,scaling)
+		w.update()
+		step += 1
+
+	w.postscript(file="map.ps", colormode='color')
+	#mainloop()
