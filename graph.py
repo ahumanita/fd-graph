@@ -108,10 +108,10 @@ class Graph :
 
 	def update(self,width,height,step) :
 		feather = 0.001
-		elec = 0.00000001
+		elec = 0.00000005
 		drag = 0.09
 		gravity_orient = 0
-		C = 0.0005
+		C = 0.001
 		tolerance = True
 
 		center = (width/2.,height/2.)
