@@ -9,4 +9,7 @@ w_height = 720
 
 arc_rad = 1
 
-G = apply(master,w_width,w_height,arc_rad)
+[G,area_list,path_list] = apply(master,w_width,w_height,arc_rad)
+
+asy = AsyFile("map.asy",1500,G,area_list,path_list)
+asy.write_file()

@@ -185,8 +185,8 @@ def apply(master,w_width,w_height,arc_rad) :
 	while tolerance :
 		# sleep(1)
 
-		# if step == 4 :
-		# 	break
+		if step == 500 :
+		 	break
 		
 		# update node coordinates
 		tolerance = G.update(width,height,step)
